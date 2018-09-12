@@ -1,0 +1,50 @@
+# Test HA application with internal AWS ELB
+# Run this to test a simple 'Hello World App' that should be spread across AZ and kube-workers
+# 2 azs should see 2 pods on instances in zone 'A', 2 pods in 'B'
+# ELB will have to be updated to take in the multiple az's(THANKS KUBERNETES *sarcasm)
+# All kube-worker instances should be included in the ELB regardless if they are 'in-service'
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    name: apache
+  name: apache
+  namespace: default
+spec:
+  replicas: 4
+  selector:
+    name: apache
+  template:
+    metadata:
+      labels:
+        name: apache
+      name: apache
+    spec:
+      containers:
+        - image: tllsk/apache_test
+          name: apache-test
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 50m
+              memory: 50Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: apache
+    name: apache
+  namespace: default
+  name: apache-service
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    name: apache
