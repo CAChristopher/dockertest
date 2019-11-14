@@ -6,4 +6,4 @@ during a demo or tutorial.
 
 merp
 
-THIS IS A THING
+THIS IS
